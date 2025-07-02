@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting.Antlr3.Runtime.Tree;
@@ -8,15 +9,46 @@ public class HexGridMeshGenerator : MonoBehaviour
 {
     [field: SerializeField] public LayerMask gridLayer { get; private set; }
     [field: SerializeField] public HexGrid hexGrid { get; private set; }
+    public Transform explosionTest;
 
     private void Awake()
     {
         if (hexGrid == null)
         {
-            hexGrid = GetComponent<HexGrid>();
+            hexGrid = GetComponentInParent<HexGrid>();
             Debug.LogError("HexGrid is not assigned. Attempting to find HexGrid component on the GameObject.");
         }
 
+    }
+    private void OnEnable()
+    {
+        MouseController.instance.OnLeftMouseClick += OnLeftMouseClick;
+        MouseController.instance.OnRightMouseClick += OnRightMouseClick;
+    }
+
+    private void OnRightMouseClick(RaycastHit hit)
+    {
+        Debug.Log("Hit object: " + hit.transform.name + " at position: " + hit.point);
+        float localX = hit.point.x - hit.transform.position.x;
+        float localZ = hit.point.z - hit.transform.position.z;
+        Debug.Log("Offset position: " + HexMetrics.CoordinateToOffset(localX, localZ, hexGrid.hexSize, hexGrid.orientation));
+    }
+
+    private void OnLeftMouseClick(RaycastHit hit)
+    {
+        float localX = hit.point.x - hit.transform.position.x;
+        float localZ = hit.point.z - hit.transform.position.z;
+
+        Vector2 location = HexMetrics.CoordinateToOffset(localX, localZ, hexGrid.hexSize, hexGrid.orientation);
+        Vector3 center = HexMetrics.Center(hexGrid.hexSize, (int)location.x, (int)location.y, hexGrid.orientation);
+        Debug.Log("Right clicked on hex: " + location);
+        Instantiate(explosionTest, center, Quaternion.identity);
+    }
+
+    private void OnDisable()
+    {
+        MouseController.instance.OnLeftMouseClick -= OnLeftMouseClick;
+        MouseController.instance.OnRightMouseClick -= OnRightMouseClick;
     }
     public void CreateHexMesh()
     {
@@ -40,12 +72,10 @@ public class HexGridMeshGenerator : MonoBehaviour
             {
                 Vector3 centrePosition = HexMetrics.Center(hexSize, x, z, orientation);
                 vertices[(z * width + x) * 7] = centrePosition; // Center vertex
-                //Vector3[] corners = HexMetrics.Corners(hexSize, orientation);
                 for (int s = 0; s < HexMetrics.Corners(hexSize, orientation).Length; s++)
                 {
                     vertices[(z * width + x) * 7 + s + 1] = centrePosition + HexMetrics.Corners(hexSize, orientation)[s % 6];
                 }
-                vertices[(z * width + x) * 7 + 6] = centrePosition; // Center vertex
             }
         }
 
@@ -56,10 +86,10 @@ public class HexGridMeshGenerator : MonoBehaviour
             {
                 for (int s = 0; s < HexMetrics.Corners(hexSize, orientation).Length; s++)
                 {
-                    int cornerIndex = s + 2 > 6 ? s + 2 - 6 : s + 2; // Wrap around the corners
-                    triangles[3 * 6 * (z * width + x) + s * 3 + 0] = (z * width + x) * 7; // Center vertex
-                    triangles[3 * 6 * (z * width + x) + s * 3 + 1] = (z * width + x) * 7 + s + 1; // First corner vertex
-                    triangles[3 * 6 * (z * width + x) + s * 3 + 2] = (z * width + x) * 7 + cornerIndex;
+                    int next = (s + 1) % 6;
+                    triangles[3 * 6 * (z * width + x) + s * 3 + 0] = (z * width + x) * 7;         // centro
+                    triangles[3 * 6 * (z * width + x) + s * 3 + 1] = (z * width + x) * 7 + s + 1; // esquina actual
+                    triangles[3 * 6 * (z * width + x) + s * 3 + 2] = (z * width + x) * 7 + next + 1; // esquina siguiente
                 }
             }
         }
