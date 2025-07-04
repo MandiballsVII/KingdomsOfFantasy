@@ -27,7 +27,7 @@ public static class HexMetrics
     }
 
     /// <summary>
-    /// Get a specific corner of a hexagon based on its size and orientation.
+    /// Get the corners of a hexagon based on its size and orientation.
     /// </summary>
     /// <param name="hexSize"></param>
     /// <param name="orientation"></param>

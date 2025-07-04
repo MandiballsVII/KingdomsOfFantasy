@@ -26,7 +26,7 @@ public class HexGridMeshGenerator : MonoBehaviour
         MouseController.instance.OnRightMouseClick += OnRightMouseClick;
     }
 
-    private void OnRightMouseClick(RaycastHit hit)
+    private void OnLeftMouseClick(RaycastHit hit)
     {
         Debug.Log("Hit object: " + hit.transform.name + " at position: " + hit.point);
         float localX = hit.point.x - hit.transform.position.x;
@@ -34,7 +34,7 @@ public class HexGridMeshGenerator : MonoBehaviour
         Debug.Log("Offset position: " + HexMetrics.CoordinateToOffset(localX, localZ, hexGrid.hexSize, hexGrid.orientation));
     }
 
-    private void OnLeftMouseClick(RaycastHit hit)
+    private void OnRightMouseClick(RaycastHit hit)
     {
         float localX = hit.point.x - hit.transform.position.x;
         float localZ = hit.point.z - hit.transform.position.z;
